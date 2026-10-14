@@ -156,3 +156,31 @@
     });
   }
 })();
+
+// 19판: 맨 위 메뉴가 읽고 있는 구간을 표시(첫 화면), 이력서 인쇄
+(function () {
+  var links = [], secs = [];
+  var as = document.querySelectorAll('.bar__nav a[href*="#"]');
+  for (var i = 0; i < as.length; i++) {
+    var id = as[i].getAttribute('href').split('#')[1];
+    var s = id && document.getElementById(id);
+    if (s && document.body.classList.contains('is-home')) { links.push(as[i]); secs.push(s); }
+  }
+  if (links.length) {
+    var spy = function () {
+      var line = window.innerHeight * 0.4, cur = -1;
+      for (var j = 0; j < secs.length; j++) if (secs[j].getBoundingClientRect().top <= line) cur = j;
+      if (cur >= 0 && secs[cur].getBoundingClientRect().bottom <= line) cur = -1;  // 그 구간을 다 지나면 표시하지 않음
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) cur = secs.length - 1;  // 맨 아래면 마지막 구간
+      for (var k = 0; k < links.length; k++) links[k].classList.toggle('is-on', k === cur);
+    };
+    var tick = null;
+    window.addEventListener('scroll', function () { if (!tick) tick = window.requestAnimationFrame(function () { tick = null; spy(); }); }, { passive: true });
+    window.addEventListener('resize', spy);
+    spy();
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.closest && t.closest('[data-print]')) window.print();
+  });
+})();
