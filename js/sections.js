@@ -87,27 +87,108 @@
     calc();
   });
 
-  // 그림 크게 보기
-  var lb = null;
-  function openImage(src, alt) {
+  // 그림 크게 보기: 같은 묶음(띠·격자)의 그림을 앞뒤로 넘겨 본다. 화살표 단추, 키보드 좌우, 손가락 밀기, 바깥을 누르면 닫힘
+  var lb = null, lbImgs = [], lbAt = 0;
+  function arrow(dir) {
+    return '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="' + (dir < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+  function lbShow(i) {
+    if (!lbImgs.length) return;
+    lbAt = (i + lbImgs.length) % lbImgs.length;
+    var src = lbImgs[lbAt];
+    var im = lb.querySelector('img');
+    im.src = src.currentSrc || src.src;
+    im.alt = src.alt || '';
+    lb.querySelector('.lb__n').textContent = lbImgs.length > 1 ? (lbAt + 1) + ' / ' + lbImgs.length : '';
+    lb.querySelector('.lb__alt').textContent = src.alt || '';
+    lb.querySelector('.lb__prev').hidden = lb.querySelector('.lb__next').hidden = lbImgs.length < 2;
+    [lbAt + 1, lbAt - 1].forEach(function (k) { var s = lbImgs[(k + lbImgs.length) % lbImgs.length]; if (s) { var p = new Image(); p.src = s.currentSrc || s.src; } });
+    if (src.scrollIntoView) src.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  function openImage(target) {
     if (!lb) {
       lb = document.createElement('dialog');
       lb.className = 'lb';
-      lb.appendChild(document.createElement('img'));
-      lb.addEventListener('click', function () { lb.close(); });
+      lb.innerHTML = '<figure class="lb__f"><img alt=""><figcaption class="lb__cap"><span class="lb__n"></span><span class="lb__alt"></span></figcaption></figure>'
+        + '<button type="button" class="lb__btn lb__prev" aria-label="Previous">' + arrow(-1) + '</button>'
+        + '<button type="button" class="lb__btn lb__next" aria-label="Next">' + arrow(1) + '</button>'
+        + '<button type="button" class="lb__btn lb__x" aria-label="Close">&times;</button>';
       document.body.appendChild(lb);
+      lb.querySelector('.lb__prev').addEventListener('click', function (e) { e.stopPropagation(); lbShow(lbAt - 1); });
+      lb.querySelector('.lb__next').addEventListener('click', function (e) { e.stopPropagation(); lbShow(lbAt + 1); });
+      lb.querySelector('.lb__x').addEventListener('click', function (e) { e.stopPropagation(); lb.close(); });
+      lb.querySelector('img').addEventListener('click', function (e) { e.stopPropagation(); if (lbImgs.length > 1) lbShow(lbAt + 1); else lb.close(); });
+      lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
+      lb.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); lbShow(lbAt + 1); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); lbShow(lbAt - 1); }
+      });
+      var tx = null;
+      lb.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+      lb.addEventListener('touchend', function (e) {
+        if (tx === null) return;
+        var dx = e.changedTouches[0].clientX - tx; tx = null;
+        if (Math.abs(dx) > 40) lbShow(lbAt + (dx < 0 ? 1 : -1));
+      }, { passive: true });
     }
-    var im = lb.firstChild;
-    im.src = src;
-    im.alt = alt || '';
-    if (lb.showModal) lb.showModal();
+    var group = target.closest('.strip, .pgrid, .covers, .wk__b, .wk__sec') || document;
+    lbImgs = all('img.zoom', group);
+    if (lbImgs.indexOf(target) < 0) lbImgs = [target];
+    lbShow(lbImgs.indexOf(target));
+    if (lb.showModal && !lb.open) lb.showModal();
   }
   if (window.HTMLDialogElement) {
     document.addEventListener('click', function (e) {
       var t = e.target;
-      if (t && t.classList && t.classList.contains('zoom')) openImage(t.currentSrc || t.src, t.alt);
+      if (t && t.classList && t.classList.contains('zoom') && !t.closest('.is-drag')) openImage(t);
     });
   }
+
+  // 옆으로 미는 띠: PC에서는 양 끝에 화살표 단추, 마우스로 끌어서도 넘긴다(끌면 그 뒤의 누르기는 무시)
+  all('.strip').forEach(function (st) {
+    var w = document.createElement('div');
+    w.className = 'strip__w';
+    st.parentNode.insertBefore(w, st);
+    w.appendChild(st);
+    var prev = document.createElement('button'), next = document.createElement('button');
+    prev.type = next.type = 'button';
+    prev.className = 'strip__btn strip__btn--prev'; next.className = 'strip__btn strip__btn--next';
+    prev.setAttribute('aria-label', 'Scroll left'); next.setAttribute('aria-label', 'Scroll right');
+    prev.innerHTML = arrow(-1); next.innerHTML = arrow(1);
+    w.appendChild(prev); w.appendChild(next);
+    function sync() {
+      var can = st.scrollWidth > st.clientWidth + 4;
+      prev.hidden = !can || st.scrollLeft <= 2;
+      next.hidden = !can || st.scrollLeft + st.clientWidth >= st.scrollWidth - 2;
+    }
+    function go(dir) { st.scrollBy({ left: dir * Math.max(120, st.clientWidth - 48), behavior: still ? 'auto' : 'smooth' }); }
+    prev.addEventListener('click', function () { go(-1); });
+    next.addEventListener('click', function () { go(1); });
+    st.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    if (window.ResizeObserver) new ResizeObserver(sync).observe(st);
+    all('img', st).forEach(function (im) { if (!im.complete) im.addEventListener('load', sync); });
+    sync();
+    var x0 = 0, s0 = 0, dragging = false, moved = false;
+    st.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      dragging = true; moved = false; x0 = e.clientX; s0 = st.scrollLeft;
+    });
+    st.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - x0;
+      if (!moved && Math.abs(dx) > 6) { moved = true; st.classList.add('is-drag'); try { st.setPointerCapture(e.pointerId); } catch (err) {} }
+      if (moved) { st.scrollLeft = s0 - dx; e.preventDefault(); }
+    });
+    function end(e) {
+      if (!dragging) return;
+      dragging = false;
+      if (moved) { setTimeout(function () { st.classList.remove('is-drag'); }, 0); try { st.releasePointerCapture(e.pointerId); } catch (err) {} }
+    }
+    st.addEventListener('pointerup', end);
+    st.addEventListener('pointercancel', end);
+    st.addEventListener('dragstart', function (e) { e.preventDefault(); });
+  });
 
   // 영상: 화면에 들어오면 소리 없이 재생, 벗어나면 멈춤
   all('[data-clip]').forEach(function (box) {
