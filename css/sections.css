@@ -227,6 +227,11 @@ html[data-lang="ko"] .wk__t{font-weight:700;line-height:1.16;letter-spacing:-.03
 .aig__txt{display:flex;align-items:flex-end;height:100%;padding:12px 14px;font-weight:600;font-size:clamp(20px,1.7vw,26px);letter-spacing:-.035em;line-height:1;color:var(--dim)}
 .aig__t{margin:12px 0 4px;font-size:14.5px;font-weight:500;line-height:1.3;color:var(--ink)}
 .aig__d{font-size:13px;line-height:1.45;color:var(--dim)}
+.aig__u{margin-top:5px;font:400 11px/1.4 var(--mono);color:var(--mute)}
+.aig__i a{color:inherit}
+.aig__i a:hover .aig__t{color:var(--acc-2)}
+.aig__i a .aig__m{transition:outline-color .2s}
+.aig__i a:hover .aig__m{outline-color:var(--mute)}
 
 /* 문서와 화면 */
 .doc{padding:22px 0 8px;border-top:1px solid var(--line)}

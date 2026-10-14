@@ -1,0 +1,46 @@
+올릴 파일 목록 (2026-10-14 19:13 만듦, 기준: 2026-10-14 19:13에 올라간 판)
+
+이 폴더 안의 것이 그 뒤로 바뀌거나 새로 생긴 파일 전부입니다. 경로가 사이트와 같으니 통째로 올리면 같은 자리의 파일이 새 것으로 바뀝니다.
+
+■ 올리는 법(GitHub 웹)
+   저장소 첫 화면 → Add file > Upload files → 탐색기에서 이 폴더 안의 항목(파일과 폴더)을 전부 선택해 끌어다 놓기 → Commit changes.
+   끌어다 놓을 항목: css, favicon.svg, img, index.html, js, photo, resume.html, work
+   파일 수: 35개 (한 번에 100개 한도)
+   올리고 나면 "올렸다"고 알려 주세요. 그걸 기준으로 다음 업데이트 폴더를 만듭니다.
+
+■ 파일 (35)
+   css/main.css
+   css/sections.css
+   favicon.svg
+   img/ai/axpro_team.jpg
+   img/ai/filledcloud.jpg
+   img/ai/filledmoney.jpg
+   img/ai/filledpixel.jpg
+   img/ai/k9check.jpg
+   img/ai/k9km.jpg
+   img/ai/mayorcard.jpg
+   img/ai/mayorrest.jpg
+   img/ai/stackcar.jpg
+   img/ai/stackinv.jpg
+   img/ai/trip_osaka.jpg
+   img/ai/trip_paris.jpg
+   img/ai/trip_yeongjong.jpg
+   img/ai/weatherkorea.jpg
+   img/ai/wefin.jpg
+   img/ai/wenote.jpg
+   index.html
+   js/main.js
+   js/sections.js
+   photo/id.jpg
+   resume.html
+   work/craft.html
+   work/defs.html
+   work/docs.html
+   work/edu.html
+   work/hbm.html
+   work/kace.html
+   work/lab.html
+   work/sempio.html
+   work/thesis.html
+   work/tools.html
+   work/toxinfo.html
