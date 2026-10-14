@@ -53,6 +53,22 @@
     el.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
   });
 
+  // 소메뉴·주소의 ?cat=: 첫 화면의 작업 격자를 그 분야로 거른다. 같은 쪽 안에서 누르면 다시 읽지 않고 거른 뒤 내려간다
+  var cat = null;
+  try { cat = new URLSearchParams(location.search).get('cat'); } catch (err) {}
+  if (cat && filters.length && ['research', 'planning', 'making', 'all'].indexOf(cat) >= 0) filter(cat);
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href*="?cat="]');
+    var work = document.getElementById('work');
+    if (!a || !work || !filters.length) return;
+    var m = a.getAttribute('href').match(/cat=(\w+)/);
+    if (!m) return;
+    e.preventDefault();
+    filter(m[1]);
+    work.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' });
+    try { history.replaceState(null, '', '?cat=' + m[1] + '#work'); } catch (err) {}
+  });
+
   // 위험지수: 지표 다섯 개의 가중합
   all('[data-risk]').forEach(function (box) {
     var inputs = all('input[type=range]', box);
@@ -241,7 +257,7 @@
 // 19판: 맨 위 메뉴가 읽고 있는 구간을 표시(첫 화면), 이력서 인쇄
 (function () {
   var links = [], secs = [];
-  var as = document.querySelectorAll('.bar__nav a[href*="#"]');
+  var as = document.querySelectorAll('.bar__nav > a[href*="#"], .bar__nav > .bar__item > a[href*="#"]');
   for (var i = 0; i < as.length; i++) {
     var id = as[i].getAttribute('href').split('#')[1];
     var s = id && document.getElementById(id);
