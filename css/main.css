@@ -80,7 +80,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   column-gap:clamp(20px,3vw,44px);
 }
 .role{
-  display:grid;grid-template-columns:40px minmax(0,1fr) 276px;
+  display:grid;grid-template-columns:40px minmax(0,1fr) clamp(240px,22vw,310px);
   column-gap:clamp(12px,1.5vw,22px);align-items:end;
   padding:clamp(12px,2.2vh,24px) 0 clamp(10px,1.9vh,20px);
   border-bottom:1px solid var(--line);
@@ -88,12 +88,12 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 }
 .role__no{align-self:start;padding-top:.75em;font:400 12px/1 var(--num);color:var(--mute)}
 .role__word{
-  font-weight:600;font-size:clamp(52px,min(10.2vw,16.4vh),164px);line-height:.92;letter-spacing:-.048em;
+  font-weight:600;font-size:clamp(52px,min(10.2vw,16.4vh),150px);line-height:.92;letter-spacing:-.048em;
   white-space:nowrap;color:var(--ink);transition:color .35s var(--ease);
 }
 html[data-lang="ko"] .role__word{font-weight:700;letter-spacing:-.045em;font-size:clamp(48px,min(9vw,14.6vh),146px);line-height:1.02}
 .dot{font-style:normal;color:var(--acc)}
-.role__proof{padding-bottom:.6em;font:400 12px/1.72 var(--mono);color:var(--mute);transition:color .35s var(--ease);white-space:nowrap}
+.role__proof{padding-bottom:.6em;font:400 12px/1.72 var(--mono);color:var(--mute);transition:color .35s var(--ease);white-space:normal;text-wrap:pretty}
 .role__proof li:first-child{color:var(--dim)}
 html[data-lang="ko"] .role__proof{font-size:13px;line-height:1.75}
 @media (hover:hover){
@@ -212,7 +212,7 @@ img.pane[data-for="portrait"]{filter:contrast(1.04) brightness(.94)}
 /* 좁은 화면 */
 @media (max-width:1080px){
   .role{grid-template-columns:32px minmax(0,1fr)}
-  .role__proof{grid-column:2;padding:10px 0 2px}
+  .role__proof{grid-column:2;padding:14px 0 2px}
 }
 @media (max-width:860px){
   .bar{grid-template-columns:1fr auto}
@@ -294,3 +294,11 @@ html.is-card{overflow:hidden}
 
 /* 저장된 언어가 한글이면 바꾸기 전의 영문이 비치지 않게 */
 html[data-lang="ko"]:not(.lang-ready) body{visibility:hidden}
+
+/* 검수 수정: 아주 좁은 화면의 정보 칸은 한 열, 메뉴 줄은 글자 간격 줄임 */
+@media (max-width:420px){
+  .spec{grid-template-columns:minmax(0,1fr)}
+  .spec > div,.spec > div:nth-child(2n+1),.spec > div + div{padding-left:0;border-right:0;border-bottom:1px solid var(--line-2)}
+  .spec > div:last-child{border-bottom:0}
+  .spec dd a{white-space:normal;overflow-wrap:anywhere}
+}

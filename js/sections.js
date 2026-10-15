@@ -281,3 +281,32 @@
     if (t && t.closest && t.closest('[data-print]')) window.print();
   });
 })();
+
+// v3: 경로 띠의 '←'는 사이트 안에서 들어왔으면 보던 자리로(브라우저 뒤로), 아니면 부모 쪽으로. 문서 쪽 종류 칩은 스크롤을 따라 켜짐
+(function () {
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('[data-back]');
+    if (!a) return;
+    try {
+      if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { e.preventDefault(); history.back(); }
+    } catch (err) {}
+  });
+  var links = document.querySelectorAll('.crumb__kinds a[data-spy]');
+  if (!links.length) return;
+  var secs = [];
+  for (var i = 0; i < links.length; i++) {
+    var s = document.getElementById(links[i].getAttribute('data-spy'));
+    if (s) secs.push([s, links[i]]);
+  }
+  var spy = function () {
+    var line = window.innerHeight * 0.35, cur = null;
+    for (var j = 0; j < secs.length; j++) if (secs[j][0].getBoundingClientRect().top <= line) cur = secs[j][1];
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) cur = secs[secs.length - 1][1];
+    for (var k = 0; k < secs.length; k++) secs[k][1].classList.toggle('is-on', secs[k][1] === cur);
+    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  };
+  var tick = null;
+  window.addEventListener('scroll', function () { if (!tick) tick = window.requestAnimationFrame(function () { tick = null; spy(); }); }, { passive: true });
+  window.addEventListener('resize', spy);
+  spy();
+})();
