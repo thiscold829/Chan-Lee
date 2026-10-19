@@ -104,7 +104,7 @@
   });
 
   // 그림 크게 보기: 같은 묶음(띠·격자)의 그림을 앞뒤로 넘겨 본다. 화살표 단추, 키보드 좌우, 손가락 밀기, 바깥을 누르면 닫힘
-  var lb = null, lbImgs = [], lbAt = 0;
+  var lb = null, lbImgs = [], lbAt = 0, lbPop = false;
   function arrow(dir) {
     return '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="' + (dir < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
@@ -121,6 +121,10 @@
     [lbAt + 1, lbAt - 1].forEach(function (k) { var s = lbImgs[(k + lbImgs.length) % lbImgs.length]; if (s) { var p = new Image(); p.src = s.currentSrc || s.src; } });
     if (src.scrollIntoView) src.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
+  function lbClose() {  // 열 때 넣은 기록이 있으면 그걸 되돌려 닫는다(popstate가 닫음), 없으면 바로 닫음
+    if (history.state && history.state.lb) { try { history.back(); return; } catch (err) {} }
+    lb.close();
+  }
   function openImage(target) {
     if (!lb) {
       lb = document.createElement('dialog');
@@ -132,9 +136,15 @@
       document.body.appendChild(lb);
       lb.querySelector('.lb__prev').addEventListener('click', function (e) { e.stopPropagation(); lbShow(lbAt - 1); });
       lb.querySelector('.lb__next').addEventListener('click', function (e) { e.stopPropagation(); lbShow(lbAt + 1); });
-      lb.querySelector('.lb__x').addEventListener('click', function (e) { e.stopPropagation(); lb.close(); });
-      lb.querySelector('img').addEventListener('click', function (e) { e.stopPropagation(); if (lbImgs.length > 1) lbShow(lbAt + 1); else lb.close(); });
-      lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
+      lb.querySelector('.lb__x').addEventListener('click', function (e) { e.stopPropagation(); lbClose(); });
+      lb.querySelector('img').addEventListener('click', function (e) { e.stopPropagation(); if (lbImgs.length > 1) lbShow(lbAt + 1); else lbClose(); });
+      lb.addEventListener('click', function (e) { if (e.target === lb) lbClose(); });
+      // 열 때 브라우저 기록을 하나 넣어 두어, 휴대폰 뒤로가기(제스처)가 쪽을 떠나지 않고 크게 보기를 닫는다
+      lb.addEventListener('close', function () {
+        if (lbPop) { lbPop = false; return; }
+        if (history.state && history.state.lb) { try { history.back(); } catch (err) {} }
+      });
+      window.addEventListener('popstate', function () { if (lb && lb.open) { lbPop = true; lb.close(); } });
       lb.addEventListener('keydown', function (e) {
         if (e.key === 'ArrowRight') { e.preventDefault(); lbShow(lbAt + 1); }
         else if (e.key === 'ArrowLeft') { e.preventDefault(); lbShow(lbAt - 1); }
@@ -151,8 +161,12 @@
     lbImgs = all('img.zoom', group);
     if (lbImgs.indexOf(target) < 0) lbImgs = [target];
     lbShow(lbImgs.indexOf(target));
-    if (lb.showModal && !lb.open) lb.showModal();
+    if (lb.showModal && !lb.open) {
+      lb.showModal();
+      if (!(history.state && history.state.lb)) { try { history.pushState({ lb: 1 }, ''); } catch (err) {} }
+    }
   }
+  try { if (history.state && history.state.lb) history.replaceState(null, ''); } catch (err) {}  // 크게 보기 중 새로 고침한 뒤 남은 기록 표시 지움
   if (window.HTMLDialogElement) {
     document.addEventListener('click', function (e) {
       var t = e.target;
@@ -284,12 +298,15 @@
 
 // v3: 경로 띠의 '←'는 사이트 안에서 들어왔으면 보던 자리로(브라우저 뒤로), 아니면 부모 쪽으로. 문서 쪽 종류 칩은 스크롤을 따라 켜짐
 (function () {
+  // 문서 종류 칩: 브라우저 기록을 남기지 않고 그 구간으로 스크롤만(뒤로가기가 칩 사이를 되감지 않게)
   document.addEventListener('click', function (e) {
-    var a = e.target && e.target.closest && e.target.closest('[data-back]');
+    var a = e.target && e.target.closest && e.target.closest('.crumb__kinds a[data-spy]');
     if (!a) return;
-    try {
-      if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { e.preventDefault(); history.back(); }
-    } catch (err) {}
+    var s = document.getElementById(a.getAttribute('data-spy'));
+    if (!s) return;
+    e.preventDefault();
+    s.scrollIntoView({ block: 'start' });
+    try { history.replaceState(history.state, '', a.getAttribute('href')); } catch (err) {}
   });
   var links = document.querySelectorAll('.crumb__kinds a[data-spy]');
   if (!links.length) return;
@@ -303,7 +320,10 @@
     for (var j = 0; j < secs.length; j++) if (secs[j][0].getBoundingClientRect().top <= line) cur = secs[j][1];
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) cur = secs[secs.length - 1][1];
     for (var k = 0; k < secs.length; k++) secs[k][1].classList.toggle('is-on', secs[k][1] === cur);
-    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (cur) {  // 칩 띠 안에서만 보이게 밀기(창 스크롤은 건드리지 않음)
+      var k = cur.parentNode, l = cur.offsetLeft, r = l + cur.offsetWidth;
+      if (l < k.scrollLeft) k.scrollLeft = l; else if (r > k.scrollLeft + k.clientWidth) k.scrollLeft = r - k.clientWidth;
+    }
   };
   var tick = null;
   window.addEventListener('scroll', function () { if (!tick) tick = window.requestAnimationFrame(function () { tick = null; spy(); }); }, { passive: true });

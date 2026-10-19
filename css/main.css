@@ -169,6 +169,8 @@ img.pane[data-for="portrait"]{filter:contrast(1.04) brightness(.94)}
 .spec > div:last-child{border-right:0}
 .spec dt{font:400 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:9px}
 .spec dd{font-size:15px;line-height:1.35;color:var(--ink)}
+.spec__l{display:block}
+.spec__l + .spec__l{margin-top:6px}
 .spec a{border-bottom:1px solid var(--line)}
 .spec a:hover{border-color:var(--acc-2)}
 
