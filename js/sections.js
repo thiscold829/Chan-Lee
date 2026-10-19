@@ -108,17 +108,31 @@
   function arrow(dir) {
     return '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="' + (dir < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
+  // AVIF 지원 여부(한 번만): 지원하면 아직 로드 안 된 그림도 picture의 AVIF 원본을 쓴다(무게 절반)
+  var avifOK = null;
+  (function () {
+    var p = new Image();
+    p.onload = function () { avifOK = p.width === 1; };
+    p.onerror = function () { avifOK = false; };
+    p.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgANogQEAwgMg8f8D///8WfhwB8+ErK42A=';
+  })();
+  function bestSrc(el) {
+    if (el.currentSrc) return el.currentSrc;
+    var pic = el.closest && el.closest('picture');
+    var s = pic && pic.querySelector('source[type="image/avif"]');
+    return (avifOK && s && s.getAttribute('srcset')) || el.src;
+  }
   function lbShow(i) {
     if (!lbImgs.length) return;
     lbAt = (i + lbImgs.length) % lbImgs.length;
     var src = lbImgs[lbAt];
     var im = lb.querySelector('img');
-    im.src = src.currentSrc || src.src;
+    im.src = bestSrc(src);
     im.alt = src.alt || '';
     lb.querySelector('.lb__n').textContent = lbImgs.length > 1 ? (lbAt + 1) + ' / ' + lbImgs.length : '';
     lb.querySelector('.lb__alt').textContent = src.alt || '';
     lb.querySelector('.lb__prev').hidden = lb.querySelector('.lb__next').hidden = lbImgs.length < 2;
-    [lbAt + 1, lbAt - 1].forEach(function (k) { var s = lbImgs[(k + lbImgs.length) % lbImgs.length]; if (s) { var p = new Image(); p.src = s.currentSrc || s.src; } });
+    [lbAt + 1, lbAt - 1].forEach(function (k) { var s = lbImgs[(k + lbImgs.length) % lbImgs.length]; if (s) { var p = new Image(); p.src = bestSrc(s); } });
     if (src.scrollIntoView) src.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   function lbClose() {  // 열 때 넣은 기록이 있으면 그걸 되돌려 닫는다(popstate가 닫음), 없으면 바로 닫음
@@ -329,4 +343,62 @@
   window.addEventListener('scroll', function () { if (!tick) tick = window.requestAnimationFrame(function () { tick = null; spy(); }); }, { passive: true });
   window.addEventListener('resize', spy);
   spy();
+})();
+
+// 29판 (2) 타일 영상 미리보기: 마우스를 올리면 처음부터 무음 반복, 떼면 멈춤
+(function () {
+  var tiles = document.querySelectorAll('.tile');
+  for (var i = 0; i < tiles.length; i++) (function (t) {
+    var v = t.querySelector('.tile__v');
+    if (!v) return;
+    t.addEventListener('mouseenter', function () {
+      try { v.currentTime = 0; var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      v.classList.add('is-on');
+    });
+    t.addEventListener('mouseleave', function () { v.classList.remove('is-on'); try { v.pause(); } catch (e) {} });
+  })(tiles[i]);
+})();
+// (5) 읽기 진행선
+(function () {
+  var p = document.querySelector('.prog');
+  if (!p) return;
+  function tick() {
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    p.style.width = (h > 0 ? Math.min(100, Math.max(0, 100 * window.scrollY / h)) : 0) + '%';
+  }
+  window.addEventListener('scroll', tick, { passive: true });
+  window.addEventListener('resize', tick);
+  tick();
+})();
+// (10) 문서 검색: 제목·과제명(영·한 둘 다)으로 거르고 빈 종류는 숨김, 건수 표시
+(function () {
+  var q = document.querySelector('.dq__in');
+  if (!q) return;
+  var n = document.querySelector('.dq__n');
+  var docs = Array.prototype.slice.call(document.querySelectorAll('.doc'));
+  var secs = Array.prototype.slice.call(document.querySelectorAll('.wk__sec'));
+  function text(el) {
+    var out = [];
+    el.querySelectorAll('[data-en]').forEach(function (x) { out.push(x.getAttribute('data-en'), x.getAttribute('data-ko')); });
+    return out.join(' ').toLowerCase();
+  }
+  var idx = docs.map(function (d) { return text(d.querySelector('.doc__h') || d); });
+  function lang() { return document.documentElement.getAttribute('data-lang') || 'en'; }
+  function setPh() { q.placeholder = q.getAttribute('data-ph-' + lang()); }
+  setPh();
+  new MutationObserver(setPh).observe(document.documentElement, { attributes: true, attributeFilter: ['data-lang'] });
+  function run() {
+    var w = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    var shown = 0;
+    docs.forEach(function (d, i) {
+      var ok = w.every(function (x) { return idx[i].indexOf(x) >= 0; });
+      d.classList.toggle('is-hide', !ok);
+      if (ok) shown++;
+    });
+    secs.forEach(function (s) { s.classList.toggle('is-hide', !s.querySelector('.doc:not(.is-hide)')); });
+    n.textContent = w.length ? (lang() === 'ko' ? shown + ' / ' + docs.length + '건' : shown + ' of ' + docs.length) : '';
+  }
+  q.addEventListener('input', run);
+  q.addEventListener('search', run);
+  document.documentElement.addEventListener('lang-change', run);
 })();
