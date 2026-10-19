@@ -635,17 +635,17 @@ html.is-deep{scroll-padding-top:calc(var(--bar) + 52px)}
   .tile__t{grid-column:2;margin:2px 0 0;font-size:16.5px;line-height:1.25;letter-spacing:-.015em}
   .tile__d,.tile__go{display:none}
   /* A3 문서 쪽: 표지 1장씩 두 열 */
-  .wk__b{display:grid;grid-template-columns:1fr 1fr;gap:20px 12px}
-  .wk__b > * + *{margin-top:0}
-  .doc{padding:0;border-top:0;min-width:0}
-  .doc:has(.clip),.doc:has(.doc__clip){grid-column:1 / -1}
-  .doc__h{display:block;margin-bottom:8px}
-  .doc__t{font-size:14px;line-height:1.3}
-  .doc__n{display:block;margin-top:3px;white-space:normal}
-  .strip__w{position:static}
-  .strip--doc{display:block;padding:0;overflow:visible;scroll-snap-type:none}
-  .strip--doc > *:not(:first-child){display:none !important}
-  .strip--doc img{width:100%;height:auto;display:block}
+  body.is-docs .wk__b{display:grid;grid-template-columns:1fr 1fr;gap:20px 12px}
+  body.is-docs .wk__b > * + *{margin-top:0}
+  body.is-docs .doc{padding:0;border-top:0;min-width:0}
+  body.is-docs .doc:has(.clip),body.is-docs .doc:has(.doc__clip){grid-column:1 / -1}
+  body.is-docs .doc__h{display:block;margin-bottom:8px}
+  body.is-docs .doc__t{font-size:14px;line-height:1.3}
+  body.is-docs .doc__n{display:block;margin-top:3px;white-space:normal}
+  body.is-docs .strip__w{position:static}
+  body.is-docs .strip--doc{display:block;padding:0;overflow:visible;scroll-snap-type:none}
+  body.is-docs .strip--doc > *:not(:first-child){display:none !important}
+  body.is-docs .strip--doc img{width:100%;height:auto;display:block}
   /* B7 누름 반응 */
   .tile,.btn,.crumb__up,.msheet__a,.bar__nav a,.sec__more{transition:transform .12s var(--ease),filter .12s var(--ease)}
   .tile:active,.btn:active,.crumb__up:active,.msheet__a:active,.sec__more:active{transform:scale(.97);filter:brightness(1.15)}
