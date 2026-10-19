@@ -304,3 +304,6 @@ html[data-lang="ko"]:not(.lang-ready) body{visibility:hidden}
   .spec > div:last-child{border-bottom:0}
   .spec dd a{white-space:normal;overflow-wrap:anywhere}
 }
+
+/* 28판: AVIF 대체 그림을 감싼 picture는 배치에 끼어들지 않음 */
+picture{display:contents}
