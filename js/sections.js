@@ -402,3 +402,142 @@
   q.addEventListener('search', run);
   document.documentElement.addEventListener('lang-change', run);
 })();
+
+// ===== 휴대폰 개선 시안 =====
+(function () {
+  var narrow = window.matchMedia && window.matchMedia('(max-width:600px)').matches;
+  var touch = window.matchMedia && window.matchMedia('(hover:none)').matches;
+  // A1 명함형 첫 화면: 사진 틀과 단추를 낱말 위로 옮긴다(600px 이하에서만, 한 번)
+  var hero = document.querySelector('.hero');
+  if (hero && narrow) {
+    var grid = hero.querySelector('.hero__grid'), plate = hero.querySelector('.plate'), cta = hero.querySelector('.hero__foot .cta');
+    if (grid && plate) {
+      var card = document.createElement('div');
+      card.className = 'mcard';
+      grid.parentNode.insertBefore(card, grid);
+      card.appendChild(plate);
+      if (cta) card.appendChild(cta);
+    }
+  }
+  // A1 낱말을 누르면 사진 전환(터치 기기: 마우스 올림 대신). 사진을 누르면 인물로
+  if (hero && touch) {
+    var plateEl = hero.querySelector('.plate');
+    function showPane(key) {
+      if (!plateEl) return;
+      plateEl.setAttribute('data-show', key);
+      var els = plateEl.querySelectorAll('[data-for]');
+      for (var z = 0; z < els.length; z++) els[z].classList.toggle('is-on', els[z].getAttribute('data-for') === key);
+      var rs = hero.querySelectorAll('.role');
+      for (var y = 0; y < rs.length; y++) rs[y].classList.toggle('is-on', rs[y].getAttribute('data-key') === key);
+    }
+    hero.addEventListener('click', function (e) {
+      var r = e.target.closest && e.target.closest('.role');
+      if (r) { showPane(r.getAttribute('data-key')); return; }
+      if (e.target.closest && e.target.closest('.plate__frame')) showPane('portrait');
+    });
+  }
+  // A4 메뉴 시트: 메뉴의 소메뉴(프로젝트·문서 종류)를 그대로 가져와 전체 화면으로
+  var bar = document.querySelector('.bar');
+  var tools = document.querySelector('.bar__tools');
+  var subs = document.querySelectorAll('.bar__item.has-sub');
+  if (bar && tools && subs.length) {
+    var ko = (document.documentElement.getAttribute('data-lang') || 'en') === 'ko';
+    function t(en, k) { return '<span data-en="' + en + '" data-ko="' + k + '">' + (ko ? k : en) + '</span>'; }
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'bar__menu'; btn.setAttribute('aria-label', 'Menu'); btn.innerHTML = '<i></i>';
+    tools.appendChild(btn);
+    var msheet = document.createElement('div');
+    msheet.className = 'msheet'; msheet.setAttribute('role', 'dialog'); msheet.setAttribute('aria-modal', 'true');
+    var html = '<div class="msheet__top"><b>' + t('Menu', '메뉴') + '</b><button type="button" class="msheet__x" aria-label="Close">&times;</button></div>';
+    for (var i = 0; i < subs.length; i++) {
+      var top = subs[i].querySelector('a');
+      var links = subs[i].querySelectorAll('.sub__a');
+      var two = links.length > 8;
+      html += '<p class="msheet__l">' + top.innerHTML.replace(/<[^>]+>/g, '') + '</p><div class="msheet__g' + (two ? '' : ' msheet__g--2') + '">';
+      for (var k = 0; k < links.length; k++) {
+        var a = links[k];
+        html += '<a class="msheet__a' + (a.classList.contains('is-here') ? ' is-here' : '') + '" href="' + a.getAttribute('href') + '">' + a.innerHTML + '<i>›</i></a>';
+      }
+      html += '</div>';
+    }
+    var others = document.querySelectorAll('.bar__nav > .bar__item:not(.has-sub) > a, .bar__nav > a');
+    html += '<p class="msheet__l">' + t('More', '그 밖에') + '</p><div class="msheet__g">';
+    for (var m = 0; m < others.length; m++) html += '<a class="msheet__a" href="' + others[m].getAttribute('href') + '">' + others[m].innerHTML + '<i>›</i></a>';
+    var mail = document.querySelector('.bar__tools a[href^="mailto:"]');
+    if (mail) html += '<a class="msheet__a" href="' + mail.getAttribute('href') + '" data-card>' + mail.innerHTML + '<i>›</i></a>';
+    html += '</div>';
+    msheet.innerHTML = html;
+    document.body.appendChild(msheet);
+    function open() { msheet.classList.add('is-open'); document.body.classList.add('msheet-open'); }
+    function close() { msheet.classList.remove('is-open'); document.body.classList.remove('msheet-open'); }
+    btn.addEventListener('click', open);
+    msheet.querySelector('.msheet__x').addEventListener('click', close);
+    msheet.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a')) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  }
+  // B6 휴대폰: 타일 영상은 화면에 60% 이상 들어오면 재생, 벗어나면 멈춤
+  if (touch && window.IntersectionObserver) {
+    var vids = document.querySelectorAll('.tile__v');
+    if (vids.length) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (en) {
+          var v = en.target;
+          if (en.isIntersecting && en.intersectionRatio >= 0.6) { try { var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} v.classList.add('is-on'); }
+          else { v.classList.remove('is-on'); try { v.pause(); } catch (e) {} }
+        });
+      }, { threshold: [0, 0.6, 1] });
+      for (var q = 0; q < vids.length; q++) io.observe(vids[q]);
+    }
+  }
+  // B5 크게 보기: 두 손가락 확대·끌기, 두 번 탭 확대/원래대로. 확대 중에는 넘기기 동작을 막는다
+  if (touch) {
+    var scale = 1, tx = 0, ty = 0, pts = {}, d0 = 0, s0 = 1, lastTap = 0, cur = null, drag = null;
+    function apply(im) { im.style.transform = scale === 1 ? '' : 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')'; }
+    function reset(im) { scale = 1; tx = ty = 0; if (im) apply(im); }
+    function clamp(im) {
+      var r = im.parentNode.getBoundingClientRect(), w = im.clientWidth * scale, h = im.clientHeight * scale;
+      tx = Math.min(0, Math.max(r.width - w, tx)); ty = Math.min(0, Math.max(r.height - h, ty));
+      if (w <= r.width) tx = (r.width - w) / 2; if (h <= r.height) ty = (r.height - h) / 2;
+    }
+    document.addEventListener('pointerdown', function (e) {
+      var im = e.target.closest && e.target.closest('.lb__f img'); if (!im) return;
+      if (cur !== im) { cur = im; reset(im); }
+      pts[e.pointerId] = [e.clientX, e.clientY];
+      var ids = Object.keys(pts);
+      if (ids.length === 2) { var a = pts[ids[0]], b = pts[ids[1]]; d0 = Math.hypot(a[0] - b[0], a[1] - b[1]); s0 = scale; }
+      else if (scale > 1) drag = [e.clientX - tx, e.clientY - ty];
+    }, true);
+    document.addEventListener('pointermove', function (e) {
+      if (!(e.pointerId in pts) || !cur) return;
+      pts[e.pointerId] = [e.clientX, e.clientY];
+      var ids = Object.keys(pts);
+      if (ids.length === 2) { var a = pts[ids[0]], b = pts[ids[1]]; var d = Math.hypot(a[0] - b[0], a[1] - b[1]); scale = Math.min(4, Math.max(1, s0 * d / d0)); clamp(cur); apply(cur); }
+      else if (drag && scale > 1) { tx = e.clientX - drag[0]; ty = e.clientY - drag[1]; clamp(cur); apply(cur); }
+    }, true);
+    function up(e) { delete pts[e.pointerId]; if (!Object.keys(pts).length) drag = null; }
+    document.addEventListener('pointerup', up, true); document.addEventListener('pointercancel', up, true);
+    // 확대 중에는 넘기기(밀기)와 누름(다음 그림)을 막고, 두 번 탭은 확대/원래대로
+    document.addEventListener('touchstart', function (e) { if (cur && scale > 1 && e.target.closest && e.target.closest('.lb__f img')) e.stopPropagation(); }, true);
+    document.addEventListener('touchend', function (e) {
+      var im = e.target.closest && e.target.closest('.lb__f img'); if (!im) return;
+      if (scale > 1) e.stopPropagation();
+      var now = Date.now();
+      if (now - lastTap < 320) {
+        e.preventDefault(); e.stopPropagation();
+        if (scale > 1) reset(im);
+        else { var r = im.getBoundingClientRect(), t0 = e.changedTouches[0]; scale = 2.5; tx = -(t0.clientX - r.left) * (scale - 1); ty = -(t0.clientY - r.top) * (scale - 1); clamp(im); apply(im); }
+      }
+      lastTap = now;
+    }, true);
+    document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.lb__f img') && (scale > 1 || Date.now() - lastTap < 350)) { e.stopPropagation(); e.preventDefault(); } }, true);
+    // 창이 닫히거나 다른 그림으로 넘어가면 확대를 원래대로
+    var mo = new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        var tg = ms[i].target;
+        if (ms[i].attributeName === 'src' && tg === cur) reset(cur);
+        if (ms[i].attributeName === 'open' && tg.tagName === 'DIALOG' && !tg.open && cur) reset(cur);
+      }
+    });
+    mo.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['open', 'src'] });
+  }
+})();
