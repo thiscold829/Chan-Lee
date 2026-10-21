@@ -653,7 +653,11 @@ html.is-deep{scroll-padding-top:calc(var(--bar) + 52px)}
 @media (hover:none){
   a,button{-webkit-tap-highlight-color:transparent}
   .tile__v{display:block}                          /* B6 휴대폰에서는 화면에 들어오면 자동 재생 */
-  .lb__f img{touch-action:none;transform-origin:0 0;will-change:transform}   /* B5 */
+  .lb,.lb *{touch-action:none}                     /* B5 크게 보기: 브라우저 두 번 탭 확대·화면 확대를 끄고 손가락 동작은 직접 처리 */
+  .lb{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .lb__f img{transform-origin:0 0}
+  .lb__g{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;visibility:hidden}   /* 넘길 때 옆에서 같이 들어오는 그림 */
+  .lb__g.is-on{visibility:visible}
 }
 /* A4 메뉴 시트 */
 .bar__menu{display:none}

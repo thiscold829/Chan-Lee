@@ -105,6 +105,8 @@
 
   // 그림 크게 보기: 같은 묶음(띠·격자)의 그림을 앞뒤로 넘겨 본다. 화살표 단추, 키보드 좌우, 손가락 밀기, 바깥을 누르면 닫힘
   var lb = null, lbImgs = [], lbAt = 0, lbPop = false;
+  var lbTouch = window.matchMedia && window.matchMedia('(hover:none)').matches;  // 휴대폰·태블릿: 손가락 동작은 아래 lbTouchInit이 맡는다
+  var LB_FIG = '<figure class="lb__f"><img alt=""><figcaption class="lb__cap"><span class="lb__n"></span><span class="lb__alt"></span></figcaption></figure>';
   function arrow(dir) {
     return '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="' + (dir < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
@@ -134,27 +136,176 @@
     lb.querySelector('.lb__prev').hidden = lb.querySelector('.lb__next').hidden = lbImgs.length < 2;
     [lbAt + 1, lbAt - 1].forEach(function (k) { var s = lbImgs[(k + lbImgs.length) % lbImgs.length]; if (s) { var p = new Image(); p.src = bestSrc(s); } });
     if (src.scrollIntoView) src.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (lbTouch) { zReset(); lbFill(); }
   }
+  function lbGo(d) { if (lbTouch) lbSlide(d); else lbShow(lbAt + d); }
   function lbClose() {  // 열 때 넣은 기록이 있으면 그걸 되돌려 닫는다(popstate가 닫음), 없으면 바로 닫음
     if (history.state && history.state.lb) { try { history.back(); return; } catch (err) {} }
     lb.close();
+  }
+  // 휴대폰 크게 보기: 넘기면 그림이 손가락을 따라오고 옆 그림이 같이 들어온다(손을 떼면 미끄러져 자리 잡고, 짧게 밀면 제자리로).
+  // 단추·그림 누르기로 넘길 때도 같은 움직임. 두 손가락으로 확대·끌기. 두 번 탭 확대는 두지 않는다(빠르게 누를 때 잘못 커지던 것)
+  var zs = 1, zx = 0, zy = 0, lbMoved = false, lbFin = null, lbPend = null;
+  var EASE = 'cubic-bezier(.22,.61,.36,1)';
+  function lbFig() { return lb.firstElementChild; }
+  function lbIm() { return lbFig().querySelector('img'); }
+  function lbGh() { return lb.querySelectorAll('.lb__g'); }
+  function lbOff() { return window.innerWidth + 16; }
+  function setX(el, x, ms) {
+    el.style.transition = ms ? 'transform ' + ms + 'ms ' + EASE : '';
+    el.style.transform = x || ms ? 'translate3d(' + x + 'px,0,0)' : '';
+  }
+  function zApply(ms) {
+    var im = lbIm();
+    im.style.transition = ms ? 'transform ' + ms + 'ms ' + EASE : '';
+    im.style.transform = zs === 1 ? '' : 'translate(' + zx + 'px,' + zy + 'px) scale(' + zs + ')';
+  }
+  function zReset(ms) { zs = 1; zx = zy = 0; zApply(ms); }
+  function zBox() { var im = lbIm(), b = lb.getBoundingClientRect(); return [b.left + im.offsetLeft, b.top + im.offsetTop, im.offsetWidth, im.offsetHeight]; }
+  function zClamp() {  // 화면보다 작으면 가운데, 크면 가장자리가 화면 안쪽으로 들어오지 않게
+    var q = zBox(), w = q[2] * zs, h = q[3] * zs, VW = window.innerWidth, VH = window.innerHeight;
+    zx = w <= VW ? q[2] * (1 - zs) / 2 : Math.min(-q[0], Math.max(VW - w - q[0], zx));
+    zy = h <= VH ? q[3] * (1 - zs) / 2 : Math.min(-q[1], Math.max(VH - h - q[1], zy));
+  }
+  function lbFill() {  // 옆 그림 두 장(앞·뒤)을 미리 채워 둔다
+    var n = lbImgs.length, gs = lbGh();
+    [lbAt - 1, lbAt + 1].forEach(function (k, j) {
+      var g = gs[j];
+      if (!g || g._hold || n < 2) return;
+      k = (k + n) % n;
+      var s = lbImgs[k], im = g.querySelector('img'), u = bestSrc(s);
+      if (im.getAttribute('src') !== u) im.src = u;
+      g.querySelector('.lb__n').textContent = (k + 1) + ' / ' + n;
+      g.querySelector('.lb__alt').textContent = s.alt || '';
+    });
+  }
+  function lbSettle() { if (lbFin) lbFin(); if (lbPend) lbPend(); }  // 움직이는 중이면 바로 끝 자리로
+  function lbHide() {
+    var gs = lbGh();
+    for (var i = 0; i < gs.length; i++) { gs[i].classList.remove('is-on'); setX(gs[i], 0); }
+  }
+  function lbBack() {  // 제자리로
+    var fig = lbFig(), gs = lbGh(), off = lbOff(), ms = still ? 0 : 220;
+    var tm = setTimeout(end, ms + 40);
+    function end() { clearTimeout(tm); if (lbFin === end) lbFin = null; setX(fig, 0); lbHide(); }
+    lbFin = end;
+    if (!ms) return end();
+    setX(fig, 0, ms);
+    if (gs.length) { setX(gs[0], -off, ms); setX(gs[1], off, ms); }
+  }
+  function lbSlide(dir, dx) {
+    lbSettle();
+    var n = lbImgs.length;
+    if (n < 2) return;
+    dx = dx || 0;
+    var fig = lbFig(), gs = lbGh(), g = gs[dir > 0 ? 1 : 0], o = gs[dir > 0 ? 0 : 1], off = lbOff(), k = (lbAt + dir + n) % n;
+    var ms = still ? 0 : Math.max(150, Math.round(300 * (1 - Math.abs(dx) / off)));
+    zReset();
+    o.classList.remove('is-on'); setX(o, 0);
+    setX(fig, dx); setX(g, dx + dir * off); g.classList.add('is-on');
+    var tm = setTimeout(end, ms + 40);
+    function end() {
+      clearTimeout(tm);
+      if (lbFin === end) lbFin = null;
+      g._hold = true;  // 본 그림이 새 그림을 다 그릴 때까지 옆 그림이 그 자리를 덮고 있는다(깜빡임 방지)
+      setX(g, 0); setX(fig, 0); fig.style.visibility = 'hidden';
+      lbShow(k);
+      var mine = function () { if (lbPend === mine) lbPend = null; fig.style.visibility = ''; g._hold = false; g.classList.remove('is-on'); lbFill(); };
+      lbPend = mine;
+      var im = lbIm(), p = im.decode && im.decode();
+      if (p && p.then) p.then(function () { if (lbPend === mine) mine(); }, function () { if (lbPend === mine) mine(); });
+      setTimeout(function () { if (lbPend === mine) mine(); }, 500);
+    }
+    lbFin = end;
+    if (!ms) return end();
+    void fig.offsetWidth;  // 출발 자리를 먼저 그리고 움직인다
+    setX(fig, -dir * off, ms); setX(g, 0, ms);
+  }
+  function lbTouchInit() {
+    var pts = {}, g = null;
+    function ids() { return Object.keys(pts); }
+    function two() { var k = ids(), a = pts[k[0]], b = pts[k[1]]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.hypot(a[0] - b[0], a[1] - b[1]) || 1]; }
+    function one(p, t) { g = { m: 'wait', x: p[0], y: p[1], zx: zx, zy: zy, h: [[p[0], t]] }; }
+    function pinch() { var m = two(), q = zBox(); g = { m: 'pinch', d: m[2], s: zs, u: (m[0] - q[0] - zx) / zs, v: (m[1] - q[1] - zy) / zs, L: q[0], T: q[1] }; }
+    lb.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' || (e.target.closest && e.target.closest('.lb__btn'))) return;
+      if (!ids().length) { lbSettle(); lbMoved = false; }
+      pts[e.pointerId] = [e.clientX, e.clientY];
+      if (ids().length === 1) one(pts[e.pointerId], e.timeStamp);
+      else if (ids().length === 2) {
+        if (g && g.m === 'swipe') { setX(lbFig(), 0); lbHide(); }
+        lbMoved = true; pinch();
+      }
+    });
+    lb.addEventListener('pointermove', function (e) {
+      if (!(e.pointerId in pts) || !g) return;
+      pts[e.pointerId] = [e.clientX, e.clientY];
+      if (g.m === 'pinch') {  // 두 손가락 사이 지점이 손가락을 따라가게 확대
+        if (ids().length < 2) return;
+        var m = two();
+        zs = Math.min(4, Math.max(0.8, g.s * m[2] / g.d));
+        zx = m[0] - g.L - zs * g.u; zy = m[1] - g.T - zs * g.v;
+        zClamp(); zApply(); return;
+      }
+      var dx = e.clientX - g.x, dy = e.clientY - g.y;
+      if (g.m === 'wait') {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        lbMoved = true;
+        g.m = zs > 1 ? 'pan' : Math.abs(dx) >= Math.abs(dy) ? 'swipe' : 'none';
+        if (g.m === 'swipe' && lbImgs.length > 1) { var gs = lbGh(); gs[0].classList.add('is-on'); gs[1].classList.add('is-on'); }
+      }
+      if (g.m === 'pan') { zx = g.zx + dx; zy = g.zy + dy; zClamp(); zApply(); }
+      else if (g.m === 'swipe') {
+        var off = lbOff(), x = lbImgs.length > 1 ? dx : dx * 0.3, gs2 = lbGh();
+        setX(lbFig(), x);
+        if (gs2.length) { setX(gs2[0], x - off); setX(gs2[1], x + off); }
+        g.h.push([e.clientX, e.timeStamp]); if (g.h.length > 8) g.h.shift();
+      }
+    });
+    function up(e) {
+      if (!(e.pointerId in pts)) return;
+      var last = pts[e.pointerId];
+      delete pts[e.pointerId];
+      var k = ids();
+      if (g && g.m === 'pinch') {
+        if (k.length === 1) { one(pts[k[0]], e.timeStamp); g.m = zs > 1 ? 'pan' : 'none'; }
+      } else if (g && !k.length && g.m === 'swipe') {  // 화면 너비의 20% 넘게 밀었거나 빠르게 튕겼으면 넘기고, 아니면 제자리
+        var dx = last[0] - g.x, h = g.h, a = h[0];
+        for (var i = h.length - 1; i >= 0; i--) if (e.timeStamp - h[i][1] >= 60) { a = h[i]; break; }
+        var v = (last[0] - a[0]) / Math.max(16, e.timeStamp - a[1]);
+        if (e.type !== 'pointercancel' && lbImgs.length > 1 && (Math.abs(dx) > window.innerWidth * 0.2 || (Math.abs(v) > 0.35 && Math.abs(dx) > 20 && v * dx > 0))) lbSlide(dx < 0 ? 1 : -1, dx);
+        else lbBack();
+      }
+      if (!k.length) { g = null; if (zs < 1.02 && zs !== 1) zReset(still ? 0 : 200); }
+    }
+    lb.addEventListener('pointerup', up);
+    lb.addEventListener('pointercancel', up);
+    // 브라우저 자체의 화면 확대·두 번 탭 확대가 끼어들지 않게(사파리 포함)
+    lb.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+    lb.addEventListener('gesturestart', function (e) { e.preventDefault(); });
   }
   function openImage(target) {
     if (!lb) {
       lb = document.createElement('dialog');
       lb.className = 'lb';
-      lb.innerHTML = '<figure class="lb__f"><img alt=""><figcaption class="lb__cap"><span class="lb__n"></span><span class="lb__alt"></span></figcaption></figure>'
+      lb.innerHTML = LB_FIG
         + '<button type="button" class="lb__btn lb__prev" aria-label="Previous">' + arrow(-1) + '</button>'
         + '<button type="button" class="lb__btn lb__next" aria-label="Next">' + arrow(1) + '</button>'
-        + '<button type="button" class="lb__btn lb__x" aria-label="Close">&times;</button>';
+        + '<button type="button" class="lb__btn lb__x" aria-label="Close">&times;</button>'
+        + (lbTouch ? '<div class="lb__g" aria-hidden="true">' + LB_FIG + '</div><div class="lb__g" aria-hidden="true">' + LB_FIG + '</div>' : '');
       document.body.appendChild(lb);
-      lb.querySelector('.lb__prev').addEventListener('click', function (e) { e.stopPropagation(); lbShow(lbAt - 1); });
-      lb.querySelector('.lb__next').addEventListener('click', function (e) { e.stopPropagation(); lbShow(lbAt + 1); });
+      lb.querySelector('.lb__prev').addEventListener('click', function (e) { e.stopPropagation(); lbGo(-1); });
+      lb.querySelector('.lb__next').addEventListener('click', function (e) { e.stopPropagation(); lbGo(1); });
       lb.querySelector('.lb__x').addEventListener('click', function (e) { e.stopPropagation(); lbClose(); });
-      lb.querySelector('img').addEventListener('click', function (e) { e.stopPropagation(); if (lbImgs.length > 1) lbShow(lbAt + 1); else lbClose(); });
-      lb.addEventListener('click', function (e) { if (e.target === lb) lbClose(); });
+      lb.querySelector('img').addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (lbTouch && (zs > 1 || lbMoved)) return;  // 확대 중이거나 방금 끌었으면 누르기로 치지 않음
+        if (lbImgs.length > 1) lbGo(1); else lbClose();
+      });
+      lb.addEventListener('click', function (e) { if (e.target === lb && !(lbTouch && lbMoved)) lbClose(); });
       // 열 때 브라우저 기록을 하나 넣어 두어, 휴대폰 뒤로가기(제스처)가 쪽을 떠나지 않고 크게 보기를 닫는다
       lb.addEventListener('close', function () {
+        if (lbTouch) { lbSettle(); setX(lbFig(), 0); lbHide(); zReset(); }
         if (lbPop) { lbPop = false; return; }
         if (history.state && history.state.lb) { try { history.back(); } catch (err) {} }
       });
@@ -163,13 +314,16 @@
         if (e.key === 'ArrowRight') { e.preventDefault(); lbShow(lbAt + 1); }
         else if (e.key === 'ArrowLeft') { e.preventDefault(); lbShow(lbAt - 1); }
       });
-      var tx = null;
-      lb.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
-      lb.addEventListener('touchend', function (e) {
-        if (tx === null) return;
-        var dx = e.changedTouches[0].clientX - tx; tx = null;
-        if (Math.abs(dx) > 40) lbShow(lbAt + (dx < 0 ? 1 : -1));
-      }, { passive: true });
+      if (lbTouch) lbTouchInit();
+      else {  // 터치 화면 노트북 등: 손을 뗄 때 40px 넘게 밀었으면 넘김
+        var tx = null;
+        lb.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+        lb.addEventListener('touchend', function (e) {
+          if (tx === null) return;
+          var dx = e.changedTouches[0].clientX - tx; tx = null;
+          if (Math.abs(dx) > 40) lbShow(lbAt + (dx < 0 ? 1 : -1));
+        }, { passive: true });
+      }
     }
     var group = target.closest('.strip, .pgrid, .covers, .wk__b, .wk__sec') || document;
     lbImgs = all('img.zoom', group);
@@ -488,56 +642,5 @@
       }, { threshold: [0, 0.6, 1] });
       for (var q = 0; q < vids.length; q++) io.observe(vids[q]);
     }
-  }
-  // B5 크게 보기: 두 손가락 확대·끌기, 두 번 탭 확대/원래대로. 확대 중에는 넘기기 동작을 막는다
-  if (touch) {
-    var scale = 1, tx = 0, ty = 0, pts = {}, d0 = 0, s0 = 1, lastTap = 0, cur = null, drag = null;
-    function apply(im) { im.style.transform = scale === 1 ? '' : 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')'; }
-    function reset(im) { scale = 1; tx = ty = 0; if (im) apply(im); }
-    function clamp(im) {
-      var r = im.parentNode.getBoundingClientRect(), w = im.clientWidth * scale, h = im.clientHeight * scale;
-      tx = Math.min(0, Math.max(r.width - w, tx)); ty = Math.min(0, Math.max(r.height - h, ty));
-      if (w <= r.width) tx = (r.width - w) / 2; if (h <= r.height) ty = (r.height - h) / 2;
-    }
-    document.addEventListener('pointerdown', function (e) {
-      var im = e.target.closest && e.target.closest('.lb__f img'); if (!im) return;
-      if (cur !== im) { cur = im; reset(im); }
-      pts[e.pointerId] = [e.clientX, e.clientY];
-      var ids = Object.keys(pts);
-      if (ids.length === 2) { var a = pts[ids[0]], b = pts[ids[1]]; d0 = Math.hypot(a[0] - b[0], a[1] - b[1]); s0 = scale; }
-      else if (scale > 1) drag = [e.clientX - tx, e.clientY - ty];
-    }, true);
-    document.addEventListener('pointermove', function (e) {
-      if (!(e.pointerId in pts) || !cur) return;
-      pts[e.pointerId] = [e.clientX, e.clientY];
-      var ids = Object.keys(pts);
-      if (ids.length === 2) { var a = pts[ids[0]], b = pts[ids[1]]; var d = Math.hypot(a[0] - b[0], a[1] - b[1]); scale = Math.min(4, Math.max(1, s0 * d / d0)); clamp(cur); apply(cur); }
-      else if (drag && scale > 1) { tx = e.clientX - drag[0]; ty = e.clientY - drag[1]; clamp(cur); apply(cur); }
-    }, true);
-    function up(e) { delete pts[e.pointerId]; if (!Object.keys(pts).length) drag = null; }
-    document.addEventListener('pointerup', up, true); document.addEventListener('pointercancel', up, true);
-    // 확대 중에는 넘기기(밀기)와 누름(다음 그림)을 막고, 두 번 탭은 확대/원래대로
-    document.addEventListener('touchstart', function (e) { if (cur && scale > 1 && e.target.closest && e.target.closest('.lb__f img')) e.stopPropagation(); }, true);
-    document.addEventListener('touchend', function (e) {
-      var im = e.target.closest && e.target.closest('.lb__f img'); if (!im) return;
-      if (scale > 1) e.stopPropagation();
-      var now = Date.now();
-      if (now - lastTap < 320) {
-        e.preventDefault(); e.stopPropagation();
-        if (scale > 1) reset(im);
-        else { var r = im.getBoundingClientRect(), t0 = e.changedTouches[0]; scale = 2.5; tx = -(t0.clientX - r.left) * (scale - 1); ty = -(t0.clientY - r.top) * (scale - 1); clamp(im); apply(im); }
-      }
-      lastTap = now;
-    }, true);
-    document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.lb__f img') && (scale > 1 || Date.now() - lastTap < 350)) { e.stopPropagation(); e.preventDefault(); } }, true);
-    // 창이 닫히거나 다른 그림으로 넘어가면 확대를 원래대로
-    var mo = new MutationObserver(function (ms) {
-      for (var i = 0; i < ms.length; i++) {
-        var tg = ms[i].target;
-        if (ms[i].attributeName === 'src' && tg === cur) reset(cur);
-        if (ms[i].attributeName === 'open' && tg.tagName === 'DIALOG' && !tg.open && cur) reset(cur);
-      }
-    });
-    mo.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['open', 'src'] });
   }
 })();
