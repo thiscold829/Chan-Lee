@@ -213,6 +213,10 @@ html[data-lang="ko"] .wk__t{font-weight:700;line-height:1.16;letter-spacing:-.03
 .series{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
 .pgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .pgrid img{aspect-ratio:1 / 1.414;object-fit:cover;object-position:50% 0}
+.pgrid--m img{aspect-ratio:auto;object-fit:contain}
+/* picture{display:contents}(main.css) 때문에 AVIF <source>가 격자 칸 하나를 차지해 사진 줄·포스터 칸에 그림마다 빈 칸이 끼던 것.
+   첫 화면 머리 배치는 그 칸을 전제로 짜여 있어 건드리지 않고, 그림이 바로 격자 칸이 되는 두 곳만 */
+.strip > picture > source,.pgrid > picture > source{display:none}
 .duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,1.6vw,22px)}
 
 .sec__head--one{grid-template-columns:minmax(0,1fr)}
@@ -482,7 +486,7 @@ html[data-lang="ko"] .cv2__y{font-family:var(--sans);font-size:13px}
   html[data-lang="ko"] .cv2__facts dt{font-size:8.5pt}
   .cv2__facts dd{font-size:9pt;line-height:1.4}
   .cv2__facts small{font-size:8pt}
-  .cv2__sec{grid-template-columns:88pt minmax(0,1fr);gap:2pt 14pt;padding:7pt 0;break-inside:auto}
+  .cv2__sec{grid-template-columns:88pt minmax(0,1fr);gap:2pt 14pt;padding:6pt 0;break-inside:auto}
   .cv2__l{font-size:7.5pt}
   html[data-lang="ko"] .cv2__l{font-size:9pt}
   .cv2__l small{font-size:7.5pt}
@@ -501,7 +505,7 @@ html[data-lang="ko"] .cv2__y{font-family:var(--sans);font-size:13px}
   .cv2__ul li::before{content:"-";width:auto;height:auto;top:0;background:none!important;color:#777}
   .cv2__ul--big li{font-size:9.5pt;padding:1.5pt 0 1.5pt 11pt}
   .cv2__ul--big li::before{color:#333}
-  .cv2__sign{margin-top:12pt;font-size:8pt}
+  .cv2__sign{margin-top:4pt;font-size:8pt}
   .js .rv,.js .rv.is-in{opacity:1!important;transform:none!important}
 }
 
