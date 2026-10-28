@@ -644,3 +644,63 @@
     }
   }
 })();
+
+// 35판: 앱 상세 창(AI와 일하기 쪽). 칸을 누르면 열고, X·닫기 단추·바깥 누르기·Esc·뒤로 가기로 닫는다.
+// 열 때 기록을 하나 넣어(주소 #app-이름) 휴대폰 뒤로 가기가 쪽을 떠나지 않고 창을 닫는다. 창 안 사진을 크게 볼 때는 크게 보기가 위에 뜨고, 뒤로 가기는 그것부터 닫는다
+(function () {
+  if (!window.HTMLDialogElement) return;
+  var dlgs = [].slice.call(document.querySelectorAll('dialog.apd'));
+  if (!dlgs.length) return;
+  var cur = null, popClose = false;
+  // mode: 없음 = 기록 넣고 열기, 'hash' = 주소로 바로 열림(기록 없음), 'back' = 앞으로 가기로 돌아옴(기록은 이미 있음)
+  function open(d, mode) {
+    if (cur && cur.open && cur !== d) cur.close();
+    cur = d;
+    d._noPush = (mode === 'hash');
+    if (!d.open) d.showModal();
+    document.documentElement.classList.add('apd-open');
+    var body = d.querySelector('.apd__body'); if (body) body.scrollTop = 0;
+    if (!mode) { try { history.pushState({ apd: d.id }, '', '#' + d.id); } catch (e) {} }
+  }
+  function close() {
+    if (!cur) return;
+    if (cur._noPush) {  // 주소로 바로 열린 창: 기록을 되돌리면 쪽을 떠나므로 주소만 지우고 닫음
+      cur._noPush = false;
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+      cur.close(); return;
+    }
+    if (history.state && history.state.apd === cur.id) { try { history.back(); return; } catch (e) {} }
+    cur.close();
+  }
+  dlgs.forEach(function (d) {
+    d.addEventListener('click', function (e) {
+      if (e.target === d) { close(); return; }  // 창 바깥(어두운 곳)
+      if (e.target.closest('.apd__x, .apd__close')) { e.preventDefault(); close(); }
+    });
+    d.addEventListener('cancel', function (e) { e.preventDefault(); close(); });  // Esc
+    d.addEventListener('close', function () {
+      document.documentElement.classList.remove('apd-open');
+      if (popClose) { popClose = false; return; }
+      if (history.state && history.state.apd === d.id) { try { history.back(); } catch (e) {} }
+    });
+  });
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest && e.target.closest('[data-apd]');
+    if (!t) return;
+    var d = document.getElementById(t.getAttribute('data-apd'));
+    if (!d) return;
+    e.preventDefault();
+    open(d);
+  });
+  window.addEventListener('popstate', function () {
+    if (!(cur && cur.open)) {  // 앞으로 가기로 창 기록에 돌아온 경우
+      var st = history.state, d = st && st.apd && document.getElementById(st.apd);
+      if (d && d.classList.contains('apd')) open(d, 'back');
+      return;
+    }
+    if (history.state && history.state.apd === cur.id) return;  // 크게 보기를 닫고 창 기록으로 돌아온 것
+    popClose = true; cur.close();
+  });
+  var h = location.hash.slice(1), hd = h && document.getElementById(h);
+  if (hd && hd.classList.contains('apd')) open(hd, 'hash');
+})();
