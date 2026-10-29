@@ -754,3 +754,23 @@ html.apd-open{overflow:hidden}
   .apd__foot{padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
   .apd__foot .btn{flex:1 1 0;justify-content:center;text-align:center}
 }
+
+/* 영상 칸(38판): 그림 + 재생 단추, 누르면 그 자리에 영상. 셰프 편은 세 칸(좁은 화면 두 칸) */
+.pv{position:relative;background:#000}
+.pv__b{position:relative;display:block;width:100%;padding:0;border:0;background:#000;color:inherit;font:inherit;cursor:pointer}
+.pv__b img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;outline:1px solid var(--line);outline-offset:-1px;transition:opacity .4s var(--ease)}
+.pv__p{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:1px solid rgba(255,255,255,.32);background:rgba(10,11,15,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:background .25s,border-color .25s}
+.pv__p::before{content:"";position:absolute;left:21px;top:17px;border-style:solid;border-width:10px 0 10px 16px;border-color:transparent transparent transparent #fff}
+.pv--big .pv__p{left:clamp(14px,2vw,24px);top:auto;bottom:clamp(14px,2vw,24px);width:72px;height:72px;margin:0}
+.pv--big .pv__p::before{left:26px;top:22px;border-width:13px 0 13px 21px}
+.pv__b:hover .pv__p,.pv__b:focus-visible .pv__p{background:var(--acc);border-color:var(--acc)}
+.pv__b:hover img{opacity:.86}
+.pv__b:focus-visible{outline:2px solid var(--acc-2);outline-offset:2px}
+.pv__d{position:absolute;right:8px;bottom:8px;padding:4px 6px;background:rgba(10,11,15,.78);font:500 11px/1 var(--num);color:var(--ink)}
+.pv__v{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000}
+.pvg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(20px,2.4vw,32px) clamp(10px,1.2vw,16px)}
+.pvg__m{margin-top:11px;font:500 11.5px/1.4 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--dim)}
+.pvg__t{margin-top:4px;font-size:14.5px;line-height:1.45;color:var(--ink);text-wrap:pretty}
+@media (max-width:860px){.pvg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.pvg__t{font-size:13.5px}.pv__p{width:44px;height:44px;margin:-22px 0 0 -22px}.pv__p::before{left:16px;top:12px;border-width:9px 0 9px 14px}.pv--big .pv__p{width:60px;height:60px;margin:0}.pv--big .pv__p::before{left:22px;top:18px;border-width:11px 0 11px 17px}}
+@media print{.pv__p,.pv__d{display:none}}

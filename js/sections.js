@@ -704,3 +704,30 @@
   var h = location.hash.slice(1), hd = h && document.getElementById(h);
   if (hd && hd.classList.contains('apd')) open(hd, 'hash');
 })();
+
+// 영상 칸(38판): 쪽을 열 때는 영상을 받지 않고, 누른 칸에만 영상을 띄워 바로 재생. 다른 영상을 틀면 앞의 영상은 멈춤
+(function () {
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-film]');
+    if (!b) return;
+    var v = document.createElement('video'), im = b.querySelector('img');
+    v.className = 'pv__v';
+    var st = parseFloat(b.getAttribute('data-start')) || 0;
+    v.src = b.getAttribute('data-film');
+    if (st) v.addEventListener('loadedmetadata', function go() { v.removeEventListener('loadedmetadata', go); if (v.currentTime < st) v.currentTime = st; });
+    if (im) v.poster = im.currentSrc || im.src;
+    v.controls = true;
+    v.preload = 'auto';
+    v.setAttribute('playsinline', '');
+    v.setAttribute('aria-label', (b.querySelector('.sr') || b).textContent);
+    b.parentNode.classList.add('is-on');
+    b.parentNode.replaceChild(v, b);
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  });
+  document.addEventListener('play', function (e) {
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('pv__v')) return;
+    document.querySelectorAll('video.pv__v').forEach(function (o) { if (o !== t && !o.paused) o.pause(); });
+  }, true);
+})();
