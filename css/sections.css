@@ -774,3 +774,7 @@ html.apd-open{overflow:hidden}
 @media (max-width:860px){.pvg{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:420px){.pvg__t{font-size:13.5px}.pv__p{width:44px;height:44px;margin:-22px 0 0 -22px}.pv__p::before{left:16px;top:12px;border-width:9px 0 9px 14px}.pv--big .pv__p{width:60px;height:60px;margin:0}.pv--big .pv__p::before{left:22px;top:18px;border-width:11px 0 11px 17px}}
 @media print{.pv__p,.pv__d{display:none}}
+
+/* 39판: 표지 왼쪽 아래에 글자가 있는 영상(MENTBOX)은 큰 재생 단추를 가운데로 */
+.pv--big.pv--mid .pv__p{left:50%;top:50%;bottom:auto;margin:-36px 0 0 -36px}
+@media (max-width:420px){.pv--big.pv--mid .pv__p{margin:-30px 0 0 -30px}}

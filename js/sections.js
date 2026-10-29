@@ -707,13 +707,48 @@
 
 // 영상 칸(38판): 쪽을 열 때는 영상을 받지 않고, 누른 칸에만 영상을 띄워 바로 재생. 다른 영상을 틀면 앞의 영상은 멈춤
 (function () {
+  // 39판: 긴 영상(.m3u8, 6초 조각)은 사파리는 그대로, 나머지 브라우저는 hls.js로. hls.js는 그런 영상이 있는 쪽에서만 미리 받아 둠
+  var HLS = ((document.currentScript && document.currentScript.src) || '').replace(/sections\.js.*$/, 'hls-1.7.3.light.min.js'), wait = [];
+  function native(v) { return !!(v || document.createElement('video')).canPlayType('application/vnd.apple.mpegurl'); }
+  function loadHls(cb) {
+    if (window.Hls) return cb();
+    wait.push(cb);
+    if (wait.length > 1) return;
+    var s = document.createElement('script');
+    s.src = HLS;
+    s.async = true;
+    s.onload = s.onerror = function () { var w = wait; wait = []; w.forEach(function (f) { f(); }); };
+    document.head.appendChild(s);
+  }
+  if (document.querySelector('[data-film$=".m3u8"]') && !native()) (window.requestIdleCallback || setTimeout)(function () { loadHls(function () {}); });
+  function playNow(v) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  // 한 길이 막히면 다른 길로: 기본 재생이 오류면 hls.js, hls.js가 안 되거나 치명 오류면 기본 재생
+  function direct(v, src, fail) {
+    if (fail) v.addEventListener('error', function once() { v.removeEventListener('error', once); fail(); });
+    v.src = src;
+    playNow(v);
+  }
+  function viaHls(v, src, fail) {
+    loadHls(function () {
+      if (!window.Hls || !window.Hls.isSupported()) return fail();
+      var h = new window.Hls();
+      h.on(window.Hls.Events.ERROR, function (ev, d) { if (d && d.fatal) { h.destroy(); fail(); } });
+      h.loadSource(src);
+      h.attachMedia(v);
+      playNow(v);
+    });
+  }
+  function feed(v, src) {
+    if (!/\.m3u8$/.test(src)) return direct(v, src);
+    if (native(v)) direct(v, src, function () { v.removeAttribute('src'); v.load(); viaHls(v, src, function () {}); });
+    else viaHls(v, src, function () { direct(v, src); });
+  }
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-film]');
     if (!b) return;
     var v = document.createElement('video'), im = b.querySelector('img');
     v.className = 'pv__v';
     var st = parseFloat(b.getAttribute('data-start')) || 0;
-    v.src = b.getAttribute('data-film');
     if (st) v.addEventListener('loadedmetadata', function go() { v.removeEventListener('loadedmetadata', go); if (v.currentTime < st) v.currentTime = st; });
     if (im) v.poster = im.currentSrc || im.src;
     v.controls = true;
@@ -722,8 +757,7 @@
     v.setAttribute('aria-label', (b.querySelector('.sr') || b).textContent);
     b.parentNode.classList.add('is-on');
     b.parentNode.replaceChild(v, b);
-    var p = v.play();
-    if (p && p.catch) p.catch(function () {});
+    feed(v, b.getAttribute('data-film'));
   });
   document.addEventListener('play', function (e) {
     var t = e.target;
