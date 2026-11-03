@@ -775,3 +775,13 @@ html.apd-open{overflow:hidden}
 @media (max-width:420px){.pvg__t{font-size:13.5px}.pv__p{width:44px;height:44px;margin:-22px 0 0 -22px}.pv__p::before{left:16px;top:12px;border-width:9px 0 9px 14px}.pv--big .pv__p{width:60px;height:60px;margin:0}.pv--big .pv__p::before{left:22px;top:18px;border-width:11px 0 11px 17px}}
 @media print{.pv__p,.pv__d{display:none}}
 
+/* 43판: 쪽 맨 위 한눈에 보는 칸 넷(누르면 그 구간으로) */
+.aig--4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.aig__i--jump{display:block;color:inherit}
+.aig__i--jump:hover .aig__t{color:var(--acc-2)}
+.aig__i--jump .aig__m{transition:outline-color .2s}
+.aig__i--jump:hover .aig__m{outline-color:var(--mute)}
+.aig--4 .aig__t{font-size:15.5px}
+@media (max-width:860px){.aig--4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* 43판: 무문암 숨은 곳 넷(한 줄 격자, 3D 화면 가장자리가 바탕과 섞이지 않게 테두리) */
+.pgrid--q img{outline:1px solid var(--line);outline-offset:-1px;background:var(--bg-2)}
