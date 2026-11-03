@@ -785,3 +785,15 @@ html.apd-open{overflow:hidden}
 @media (max-width:860px){.aig--4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* 43판: 무문암 숨은 곳 넷(한 줄 격자, 3D 화면 가장자리가 바탕과 섞이지 않게 테두리) */
 .pgrid--q img{outline:1px solid var(--line);outline-offset:-1px;background:var(--bg-2)}
+
+/* 44판: AVIF <source>가 격자 칸을 차지하지 않게(모든 곳). 샘표 미역 사진 묶음(.series)·K-HBM 상장(.poster)에 빈 칸이 끼던 것 */
+picture > source{display:none}
+/* 44판: 영상은 모두 재생 칸. 문서 쪽에서는 다른 문서처럼 한 칸(표지 = 영상 표지), 여러 편 묶음(버섯 위크)만 한 줄 전체 */
+/* 영상 칸 크기는 문서 그림 띠와 비슷하게(띠 높이 보통 173px, 쪽 그림 폭 201px): 폭 340px = 높이 약 190px. 크게 보려면 재생바의 전체 화면 */
+.doc__clip{max-width:340px}
+body.is-docs .doc:has(.doc__clip){grid-column:auto}
+/* 44판: 유튜브 영상 칸(세바시 강연): 누르면 같은 자리에 플레이어 */
+.pv__yt{display:block;width:100%;height:auto;aspect-ratio:16/9;border:0;background:#000}
+/* 44판: 휴대폰 화면 여섯 장(ExpoDiary) 한 줄, 좁으면 세 장씩 */
+.pgrid--q6{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:860px){.pgrid--q6{grid-template-columns:repeat(3,minmax(0,1fr))}}

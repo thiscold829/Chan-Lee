@@ -765,3 +765,25 @@
     document.querySelectorAll('video.pv__v').forEach(function (o) { if (o !== t && !o.paused) o.pause(); });
   }, true);
 })();
+
+// 44판: 유튜브 영상 칸(세바시 강연, 남의 채널이라 내려받지 않음): 누르면 그 자리에 youtube-nocookie 플레이어. 사이트 영상을 틀면 유튜브는 그림으로 되돌림
+(function () {
+  var cur = null;
+  function stopYt() { if (cur && cur.f.parentNode) cur.f.parentNode.replaceChild(cur.b, cur.f); cur = null; }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-yt]');
+    if (!b) return;
+    stopYt();
+    document.querySelectorAll('video.pv__v').forEach(function (o) { if (!o.paused) o.pause(); });
+    var f = document.createElement('iframe');
+    f.className = 'pv__yt';
+    f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0&playsinline=1';
+    f.title = (b.querySelector('.sr') || b).textContent;
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    cur = {b: b, f: f};
+    b.parentNode.replaceChild(f, b);
+  });
+  document.addEventListener('play', function (e) { if (e.target.classList && e.target.classList.contains('pv__v')) stopYt(); }, true);
+})();
