@@ -807,3 +807,19 @@ body.is-docs .doc:has(.doc__clip){grid-column:auto}
 .pgrid--q5{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-width:860px){.pgrid--q5{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .btns{display:flex;flex-wrap:wrap;gap:10px}
+
+/* 46판: AI와 일하기 묶음마다 제 칸 짜임(대표·회사 실무 넷, 쇼케이스·데이터 셋, 매일 쓰는 도구 다섯), 대표 카드 꼬리표 */
+.aig + .aig{margin-top:clamp(36px,6vh,60px)}
+.aig--3{margin-bottom:0}
+.aig--3 .aig__m{aspect-ratio:16/10}
+@media (max-width:620px){.aig--3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.aig--feat .aig__t{font-size:17px;margin-top:6px}
+.aig--feat .aig__d{font-size:13.5px}
+.aig__tag{margin-top:12px;font:500 11.5px/1.3 var(--mono);letter-spacing:.03em;color:var(--acc-2)}
+/* 46판 2차: 묶음 제목이 안 보인다(사용자) → 크기는 그대로, 사이트의 표시 방식(파란 네모·가는 선·번호)으로 또렷하게.
+   묶음마다 그리드가 따로라 제목이 늘 첫 칸 → 예전 ':first-child면 선 없음' 규칙 때문에 선이 사라졌던 것도 바로잡음 */
+.wk{counter-reset:aigg}
+.aig .aig__g,.aig .aig__g:first-child{position:relative;display:flex;align-items:center;gap:10px;margin:0 0 4px;padding-top:16px;border-top:1px solid var(--line);
+  font-family:inherit;font-weight:600;font-size:13.5px;line-height:1.3;letter-spacing:.01em;text-transform:none;color:var(--ink);counter-increment:aigg}
+.aig .aig__g::before{content:"";flex:0 0 auto;width:6px;height:6px;background:var(--acc)}
+.aig .aig__g::after{content:counter(aigg,decimal-leading-zero);margin-left:auto;font:400 12px/1 var(--num);color:var(--mute)}
