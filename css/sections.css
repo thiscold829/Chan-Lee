@@ -797,3 +797,13 @@ body.is-docs .doc:has(.doc__clip){grid-column:auto}
 /* 44판: 휴대폰 화면 여섯 장(ExpoDiary) 한 줄, 좁으면 세 장씩 */
 .pgrid--q6{grid-template-columns:repeat(6,minmax(0,1fr))}
 @media (max-width:860px){.pgrid--q6{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* 45판: AI와 일하기 맨 위 서비스 카드 셋, 무문암 안 작은 머리, 숨은 곳 다섯 칸, 단추 두 개 한 줄 */
+.aig--3{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:clamp(36px,6vh,64px)}
+.aig--3 .aig__m{aspect-ratio:16/10}
+.aig--3 .aig__t{font-size:16px}
+@media (max-width:620px){.aig--3{grid-template-columns:minmax(0,1fr)}}
+.h3--sub{margin:clamp(30px,5vh,48px) 0 14px}
+.pgrid--q5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:860px){.pgrid--q5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
