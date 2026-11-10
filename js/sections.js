@@ -124,6 +124,13 @@
     var s = pic && pic.querySelector('source[type="image/avif"]');
     return (avifOK && s && s.getAttribute('srcset')) || el.src;
   }
+  function lbCap(el) {  // 47판: 쪽 언어로 된 설명(그림 설명 → 문서 이름 → alt)
+    var f = el.closest && el.closest('figure'), c = f && f.querySelector('figcaption');
+    if (c && c.textContent.trim()) return c.textContent.trim();
+    var d = el.closest && el.closest('.doc'), t = d && d.querySelector('.doc__t');
+    if (t && t.textContent.trim()) return t.textContent.trim();
+    return el.alt || '';
+  }
   function lbShow(i) {
     if (!lbImgs.length) return;
     lbAt = (i + lbImgs.length) % lbImgs.length;
@@ -132,7 +139,7 @@
     im.src = bestSrc(src);
     im.alt = src.alt || '';
     lb.querySelector('.lb__n').textContent = lbImgs.length > 1 ? (lbAt + 1) + ' / ' + lbImgs.length : '';
-    lb.querySelector('.lb__alt').textContent = src.alt || '';
+    lb.querySelector('.lb__alt').textContent = lbCap(src);
     lb.querySelector('.lb__prev').hidden = lb.querySelector('.lb__next').hidden = lbImgs.length < 2;
     [lbAt + 1, lbAt - 1].forEach(function (k) { var s = lbImgs[(k + lbImgs.length) % lbImgs.length]; if (s) { var p = new Image(); p.src = bestSrc(s); } });
     if (src.scrollIntoView) src.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -176,7 +183,7 @@
       var s = lbImgs[k], im = g.querySelector('img'), u = bestSrc(s);
       if (im.getAttribute('src') !== u) im.src = u;
       g.querySelector('.lb__n').textContent = (k + 1) + ' / ' + n;
-      g.querySelector('.lb__alt').textContent = s.alt || '';
+      g.querySelector('.lb__alt').textContent = lbCap(s);
     });
   }
   function lbSettle() { if (lbFin) lbFin(); if (lbPend) lbPend(); }  // 움직이는 중이면 바로 끝 자리로
