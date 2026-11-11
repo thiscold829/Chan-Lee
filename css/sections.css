@@ -980,3 +980,50 @@ html[data-lang="ko"] .wk__tn{line-height:1.05}
 }
 /* 규칙 12: 휴대폰 아카이브의 '맡은 일'은 줄 전체 폭으로 */
 @media (max-width:860px){.idx--g .idx__p,.idx--c .idx__p{width:auto}}
+
+/* ================================================================ 52판: 결과 칸(사실 칸 위 한 줄 전체 폭, 한 단계 크게) */
+.outcome{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:18px 0 20px;border-top:1px solid var(--line)}
+.outcome + .facts{margin-top:0}
+.outcome__l{margin:0;font:400 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--acc-2)}
+.outcome__v{margin:0;font-size:clamp(17px,1.5vw,21px);font-weight:600;line-height:1.4;letter-spacing:-.015em;color:var(--ink);text-wrap:pretty}
+
+/* ================================================================ 53판: 역할 칸 단위마다 한 줄 */
+.facts__u{display:block}
+.facts__u + .facts__u{margin-top:4px}
+
+/* ================================================================ 54판: 성과 칸(사실 칸 맨 끝, 같은 크기), 한 달 일 도식 */
+@media (min-width:1081px){
+  .facts.facts--5{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .facts.facts--5 > div:nth-child(n){padding-left:18px;border-right:1px solid var(--line-2)}
+  .facts.facts--5 > div:first-child{padding-left:0}
+  .facts.facts--5 > div:last-child{border-right:0}
+  .facts.facts--6{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .facts.facts--6 > div:nth-child(n){padding-left:18px;border-right:1px solid var(--line-2)}
+  .facts.facts--6 > div:nth-child(3n+1){padding-left:0}
+  .facts.facts--6 > div:nth-child(3n){border-right:0}
+  .facts.facts--6 > div:nth-child(-n+3){border-bottom:1px solid var(--line-2)}
+}
+@media (max-width:1080px){
+  .facts.facts--5 > div:last-child{grid-column:1 / -1;border-left:0}
+  .facts.facts--5 > div:nth-child(4){border-bottom:1px solid var(--line-2)}
+}
+.cyc{display:grid;grid-template-columns:88px minmax(0,1fr);column-gap:20px;margin-top:clamp(24px,2.6vw,36px);padding-top:20px;border-top:1px solid var(--line)}
+.cyc__k{margin:0;font:400 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.cyc__s{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin:0;padding:0;list-style:none}
+.cyc__s li{position:relative;min-width:0;padding-right:14px}
+.cyc__s li:not(:last-child)::after{content:"";position:absolute;left:28px;right:14px;top:6px;height:1px;background:var(--line)}
+.cyc__s i{display:block;margin-bottom:12px;font:normal 400 12px/1 var(--mono);color:var(--acc-2)}
+.cyc__s b{display:block;font-size:15px;font-weight:600;line-height:1.35;letter-spacing:-.01em;color:var(--ink);text-wrap:balance}
+@media (max-width:640px){
+  .cyc{grid-template-columns:minmax(0,1fr);row-gap:16px}
+  .cyc__s{grid-template-columns:minmax(0,1fr);row-gap:12px}
+  .cyc__s li{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:baseline;padding:0}
+  .cyc__s li:not(:last-child)::after{display:none}
+  .cyc__s i{margin:0}
+}
+
+/* ================================================================ 54판 2차: 휴대폰에서 전후 두 장은 한 줄씩 */
+@media (max-width:600px){
+  .jrow--ba > .fig{grid-column:1 / -1}
+  .jrow--ba > .fig img{aspect-ratio:auto}
+}
