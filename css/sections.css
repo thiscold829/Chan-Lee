@@ -1027,3 +1027,72 @@ html[data-lang="ko"] .wk__tn{line-height:1.05}
   .jrow--ba > .fig{grid-column:1 / -1}
   .jrow--ba > .fig img{aspect-ratio:auto}
 }
+
+/* ================================================================ 55판: 구역 제목 단계
+   원인: 묶음, 구역, 이력 칸 같은 구조 제목이 날짜, 기관과 같은 이름표 모양(12px 회색 고정폭 대문자 양식)이라 본문보다 작고 위계가 거꾸로였다.
+   글자 단계: 쪽 제목 52/30 → 구역 제목 32/24 → 소제목 20/18 → 카드 제목 23/21 → 본문 18 → 이름표 12(날짜, 기관, 번호는 그대로)
+   강조는 크기, 굵기, 흰색만(상자, 색 띠 없음). 인쇄(이력서 4쪽)에 닿지 않게 화면에만 */
+:root{--h-sec:clamp(24px,2.3vw,32px);--h-sub:clamp(18px,1.45vw,20px)}
+@media screen{
+  /* 첫 화면, 프로젝트 쪽 묶음 제목: 왼쪽 제목, 오른쪽 연도 */
+  .tiles__g{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 24px;
+    margin:clamp(20px,4vh,44px) 0 calc(26px - clamp(30px,4.5vh,52px));padding-top:clamp(22px,3.2vh,32px);border-top:1px solid var(--line);
+    font:inherit;letter-spacing:normal;text-transform:none;color:inherit}
+  .tiles__g:first-child{margin-top:0;padding-top:0;border-top:0}
+  .tiles__gt{margin:0;font:600 var(--h-sec)/1.2 var(--sans);letter-spacing:-.025em;color:var(--ink);text-wrap:balance}
+  .tiles__gy{margin:0;font:400 16px/1.2 var(--sans);letter-spacing:0;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* 상세 쪽, 문서 쪽 왼쪽 구역 제목(위 작은 줄 = 연도나 분류) */
+  .wk__h{position:sticky;top:calc(var(--bar) + 24px);align-self:start;min-width:0}
+  .wk__l{position:static;margin:0;font:600 var(--h-sec)/1.2 var(--sans);letter-spacing:-.025em;text-transform:none;color:var(--ink);text-wrap:balance}
+  .wk__lm{margin:0 0 10px;font:400 15px/1.3 var(--sans);letter-spacing:0;color:var(--mute);font-variant-numeric:tabular-nums}
+
+  /* 첫 화면 이력 칸 이름(구역 제목), 소개 안의 맡을 수 있는 일(소제목) */
+  .cv__t{margin:0 0 16px;font:600 var(--h-sec)/1.2 var(--sans);letter-spacing:-.025em;text-transform:none;color:var(--ink)}
+  .about .h4{margin:30px 0 12px;font:600 var(--h-sub)/1.3 var(--sans);letter-spacing:-.015em;text-transform:none;color:var(--ink)}
+
+  /* 카드 이름표 끝 번호가 두 줄로 꺾이지 않게(영어판 DEFs 칸) */
+  .tile__k > span:last-child{white-space:nowrap}
+
+  /* 아카이브 표의 종류 줄 */
+  .idx__g th{padding:clamp(44px,6.5vh,72px) 0 14px;font:600 var(--h-sec)/1.2 var(--sans);letter-spacing:-.025em;text-transform:none;color:var(--ink)}
+  .idx__g:first-child th,.idx--g .idx__g:first-child th{padding-top:14px}
+
+  /* 소제목: AI와 일하기 쪽 묶음(파란 네모, 번호는 그대로), 구역 안 작은 머리 */
+  .aig .aig__g,.aig .aig__g:first-child{gap:12px;margin-bottom:8px;padding-top:20px;font-size:var(--h-sub);letter-spacing:-.015em}
+  .aig .aig__g::before{width:8px;height:8px}
+  .aig .aig__g::after{font-size:14px}
+  .h3{font:600 var(--h-sub)/1.3 var(--sans);letter-spacing:-.015em;text-transform:none;color:var(--ink)}
+
+  /* 이력서 쪽 칸 이름(화면만, 인쇄는 그대로) */
+  .cv2__l,html[data-lang="ko"] .cv2__l{font:600 18px/1.35 var(--sans);letter-spacing:-.01em;text-transform:none;color:var(--ink)}
+  .cv2__l small,html[data-lang="ko"] .cv2__l small{font:400 13px/1.5 var(--sans)}
+
+  /* 메뉴: 맨 위 메뉴, 거르기 단추, 경로 단추, 휴대폰 메뉴 안 묶음 이름 */
+  .bar__nav a,.bar__contact{font-size:14px;letter-spacing:.02em}
+  html[data-lang="en"] .bar__nav a,html[data-lang="en"] .bar__contact{font-size:13px;letter-spacing:.05em}
+  .chip{font-size:14px;letter-spacing:0}
+  html[data-lang="en"] .chip{font-size:13px;letter-spacing:.02em}
+  .crumb__up{font-size:13px}
+  .msheet__l{font:400 14px/1.2 var(--sans);letter-spacing:0;text-transform:none;color:var(--dim)}
+}
+@media screen and (max-width:1080px){
+  .wk__h{position:static}
+}
+@media screen and (max-width:860px){
+  .tiles__g{margin-bottom:-8px}
+  .idx--g .idx__g{padding:40px 0 10px}
+  .idx--g .idx__g:first-child{padding-top:6px}
+}
+@media screen and (max-width:600px){
+  /* 휴대폰: 쪽 제목 30과 카드 제목 21 사이가 좁아 크기만으로는 약하다 → 가는 선, 넉넉한 위 여백, 연도는 제목 아래 한 줄 */
+  .tiles__g{display:block;margin:14px 0 18px;padding-top:30px}
+  .tiles__g:first-child{margin-top:0;padding-top:0}
+  .tiles__gt{font-size:26px;line-height:1.25}
+  .tiles__gy{margin-top:6px;font-size:15px}
+  .wk__l,.cv__t,.idx__g th{font-size:24px;line-height:1.25}
+  .about .h4{font-size:18px}
+  .wk__lm{margin-bottom:8px;font-size:14px}
+  .aig .aig__g,.aig .aig__g:first-child{font-size:18px}
+  .h3{font-size:18px}
+}
