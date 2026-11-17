@@ -1096,3 +1096,39 @@ html[data-lang="ko"] .wk__tn{line-height:1.05}
   .aig .aig__g,.aig .aig__g:first-child{font-size:18px}
   .h3{font-size:18px}
 }
+
+/* ================================================================ 56판: 박물관 소개 영상은 곁들이로 작게(사진과 설명 뒤, 사용자 11/16) */
+.vside{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(18px,2.4vw,32px);align-items:center;margin-top:clamp(28px,3.4vw,44px);padding-top:clamp(22px,2.6vw,32px);border-top:1px solid var(--line-2)}
+.vside .pv{margin:0}
+.vside .pv--big .pv__p{left:14px;bottom:14px;width:48px;height:48px}
+.vside .pv--big .pv__p::before{left:18px;top:14px;border-width:10px 0 10px 15px}
+.vside__k{margin:0 0 8px;font:600 var(--h-sub)/1.3 var(--sans);letter-spacing:-.015em;color:var(--ink)}
+.vside__d{margin:0;max-width:46ch;font-size:14px;line-height:1.6;color:var(--dim);text-wrap:pretty}
+.vside + .btn,.vside + p .btn{margin-top:clamp(24px,3vw,36px)}
+@media (max-width:600px){
+  .vside{grid-template-columns:minmax(0,1fr);gap:14px}
+  .vside .pv{max-width:78%}
+}
+
+/* 56판 3차: 화면 카드(사용자 "줄글 말고 화면마다 스크린샷과 바로 아래 알맞은 설명"). 기본 두 칸, wide 한 칸, q 네 칸(세로 화면), q5 다섯 칸 */
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,3.2vw,44px) clamp(14px,1.8vw,24px);margin:clamp(26px,3vw,40px) 0 0}
+.sgrid + .sgrid{margin-top:clamp(28px,3.2vw,44px)}
+.sgrid + .wk__p,.sgrid + p{margin-top:clamp(26px,3vw,40px)}
+.sgrid--wide{grid-template-columns:minmax(0,1fr)}
+.sgrid--q{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sgrid--q5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.scard{display:flex;flex-direction:column;min-width:0}
+.scard img{aspect-ratio:16/10;object-fit:cover;object-position:50% 0}
+.sgrid--wide .scard img,.sgrid--q .scard img,.sgrid--q5 .scard img{aspect-ratio:auto;object-fit:fill}
+.fig.scard figcaption{display:flex;flex-direction:column;gap:4px;margin-top:12px;font:inherit;color:inherit}
+.scard__t{font:600 16px/1.35 var(--sans);letter-spacing:-.01em;color:var(--ink)}
+.scard__d{font-size:14px;line-height:1.55;color:var(--dim);text-wrap:pretty}
+.sgrid--q .scard__t,.sgrid--q5 .scard__t{font-size:15px}
+.sgrid--q .scard__d,.sgrid--q5 .scard__d{font-size:13px}
+@media (max-width:860px){
+  .sgrid--q5{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:600px){
+  .sgrid{grid-template-columns:minmax(0,1fr);gap:30px}
+  .sgrid--q,.sgrid--q5{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}
+}
